@@ -1,10 +1,11 @@
-package amqp
+package main
 
 import (
+	"strings"
+
 	"github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
 	"github.com/tkeel-io/kit/log"
-	"strings"
 )
 
 type SenderManager struct {
