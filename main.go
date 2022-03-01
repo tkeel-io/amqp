@@ -55,7 +55,7 @@ func userAuthHandler(conn electron.Connection, s electron.Sender) (interface{}, 
 	if token == "" || strings.HasPrefix("Bearer", token) {
 		return nil, errors.New("invalid token")
 	}
-	user, err := auth.Authenticate(token)
+	user, err := auth.Authenticate(token, auth.AuthTokenURLTestRemote)
 	if err != nil {
 		log.Error("auth failed", err)
 		return nil, err
@@ -92,7 +92,7 @@ func validateTopic(user *auth.User, topic string) bool {
 	}
 
 	req, err := http.NewRequest(http.MethodPost, validateURL, bytes.NewReader(content))
-	req.Header.Add("Authenticate", user.Token)
+	req.Header.Add("Authorization", user.Token)
 	resp, err := http.DefaultClient.Do(req)
 	defer resp.Body.Close()
 	if err != nil {

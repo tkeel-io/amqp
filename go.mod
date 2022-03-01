@@ -7,7 +7,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
-	github.com/tkeel-io/kit v0.0.0-20220301061928-e3b612f15921
+	github.com/tkeel-io/kit v0.0.0-20220301113947-aa26171b543e
 )
 
 require (

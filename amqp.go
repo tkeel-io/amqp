@@ -109,6 +109,8 @@ func (c *connection) sender(sender electron.Sender) {
 	auth, err := c.broker.authHandler(c.conn, sender)
 	if err != nil {
 		log.Error(err)
+		c.conn.Disconnect(err)
+		return
 	}
 	c.auth = auth
 
