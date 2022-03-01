@@ -1,12 +1,19 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/tkeel-io/kit/auth"
+	"github.com/tkeel-io/kit/log"
 )
 
 var address string
@@ -43,9 +50,20 @@ func run(cmd *cobra.Command, args []string) {
 	}
 }
 
-// TODO: Authenticate users here
-func userAuthHandler(electron.Connection) (interface{}, error) {
-	return nil, nil
+func userAuthHandler(conn electron.Connection, s electron.Sender) (interface{}, error) {
+	token := conn.VirtualHost()
+	if token == "" || strings.HasPrefix("Bearer", token) {
+		return nil, errors.New("invalid token")
+	}
+	user, err := auth.Authenticate(token)
+	if err != nil {
+		log.Error("auth failed", err)
+		return nil, err
+	}
+	if !validateTopic(user, s.Source()) {
+		return nil, errors.New("topic and user mismatch")
+	}
+	return user, nil
 }
 
 // senderHandler process with message witch u want to send
@@ -54,8 +72,36 @@ func senderHandler(s electron.Sender) <-chan amqp.Message {
 	go func(s electron.Sender) {
 		for i := 0; i < 5; i++ {
 			// TODO: Get Message from MQ
-			ch <- amqp.NewMessageWith(s.Source())
+			topic := s.Source()
+			ch <- amqp.NewMessageWith(topic)
 		}
 	}(s)
 	return ch
+}
+
+func validateTopic(user *auth.User, topic string) bool {
+	validateURL := "http://192.168.123.9:30707/apis/core-broker/v1/validate/subscribe"
+
+	data := map[string]string{
+		"topic": topic,
+	}
+	content, err := json.Marshal(data)
+	if err != nil {
+		log.Error("json marshal failed", err)
+		return false
+	}
+
+	req, err := http.NewRequest(http.MethodPost, validateURL, bytes.NewReader(content))
+	req.Header.Add("Authenticate", user.Token)
+	resp, err := http.DefaultClient.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		log.Error("POST topic validate error ", err)
+		return false
+	}
+	if resp.StatusCode != http.StatusOK {
+		log.Error("POST topic validate error ", resp.StatusCode)
+		return false
+	}
+	return true
 }

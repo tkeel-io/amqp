@@ -14,12 +14,12 @@ type Broker struct {
 	container     electron.Container    // electron.Container manages AMQP connections.
 	outcome       chan electron.Outcome // Channel to receive the Outcome of sent messages.
 	opts          []electron.ConnectionOption
-	authHandler   func(electron.Connection) (interface{}, error)
+	authHandler   func(electron.Connection, electron.Sender) (interface{}, error)
 	senderHandler func(electron.Sender) <-chan amqp.Message
 }
 
 func NewBroker(address string,
-	authHandler func(electron.Connection) (interface{}, error),
+	authHandler func(electron.Connection, electron.Sender) (interface{}, error),
 	senderHandler func(electron.Sender) <-chan amqp.Message,
 	opts ...electron.ConnectionOption) *Broker {
 	b := &Broker{
@@ -106,7 +106,7 @@ func (c *connection) receiver(receiver electron.Receiver) {
 
 func (c *connection) sender(sender electron.Sender) {
 	c.conn.Sync()
-	auth, err := c.broker.authHandler(c.conn)
+	auth, err := c.broker.authHandler(c.conn, sender)
 	if err != nil {
 		log.Error(err)
 	}
