@@ -1,7 +1,9 @@
 package amqp
 
 import (
+	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"net"
 
 	"github.com/apache/qpid-proton/go/pkg/amqp"
@@ -15,12 +17,12 @@ type Broker struct {
 	outcome       chan electron.Outcome // Channel to receive the Outcome of sent messages.
 	opts          []electron.ConnectionOption
 	authHandler   func(electron.Connection, electron.Sender) (interface{}, error)
-	senderHandler func(electron.Sender) <-chan amqp.Message
+	senderHandler func(context.Context, electron.Sender) <-chan amqp.Message
 }
 
 func NewBroker(address string,
 	authHandler func(electron.Connection, electron.Sender) (interface{}, error),
-	senderHandler func(electron.Sender) <-chan amqp.Message,
+	senderHandler func(context.Context, electron.Sender) <-chan amqp.Message,
 	opts ...electron.ConnectionOption) *Broker {
 	b := &Broker{
 		address:       address,
@@ -50,7 +52,8 @@ func (b *Broker) Run() error {
 			log.Debugf("Error accepting connectionAccept error: %v", err)
 			continue
 		}
-		cc := &connection{b, c, nil}
+		ctx, cancel := context.WithCancel(context.Background())
+		cc := &connection{b, c, nil, ctx, cancel}
 		go cc.run() // Handle the conn
 		log.Debugf("Accepted %v", c)
 	}
@@ -61,6 +64,8 @@ type connection struct {
 	broker *Broker
 	conn   electron.Connection
 	auth   interface{}
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // accept remotely-opened endpoints (Session, SenderManager and Receiver) on a connection
@@ -114,7 +119,7 @@ func (c *connection) sender(sender electron.Sender) {
 	}
 	c.auth = auth
 
-	ch := c.broker.senderHandler(sender)
+	ch := c.broker.senderHandler(c.ctx, sender)
 	for {
 		if sender.Error() != nil {
 			log.Debugf("%v closed: %v", sender, sender.Error())
@@ -122,10 +127,13 @@ func (c *connection) sender(sender electron.Sender) {
 		}
 
 		select {
-		case m := <-ch:
+		case m, ok := <-ch:
 			log.Debugf("%v: sent %v", sender, m.Body())
-			fmt.Printf("%v: sent %v\n", sender, m.Body())
-			sender.SendSync(m)
+			if ok {
+				sender.SendSync(m)
+			} else {
+				sender.Close(errors.New("sender closed"))
+			}
 		case <-sender.Done():
 			break
 		}
