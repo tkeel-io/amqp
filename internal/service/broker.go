@@ -1,53 +1,25 @@
-package main
+package service
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
+	tkeelAMQP "github.com/tkeel-io/amqp"
 	"github.com/tkeel-io/kit/auth"
 	"github.com/tkeel-io/kit/log"
 )
 
-var address string
-
-func main() {
-	var rootCmd = &cobra.Command{
-		Use:   "amqp-broker",
-		Short: "amqp broker starter",
-		Long:  "amqp broker starter",
-		Run:   run,
-	}
-	parseFlags(rootCmd)
-
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-}
-
-func parseFlags(root *cobra.Command) {
-	root.PersistentFlags().StringVar(&address, "address", ":3172", "the broker address and port you want to open")
-}
-
-func run(cmd *cobra.Command, args []string) {
-	broker := NewBroker(address,
+func NewBroker(addr string) *tkeelAMQP.Broker {
+	return tkeelAMQP.NewBroker(addr,
 		userAuthHandler,
 		senderHandler,
 		electron.SASLAllowedMechs("ANONYMOUS"),
 		electron.SASLAllowInsecure(true))
-	if err := broker.Run(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
 }
 
 func userAuthHandler(conn electron.Connection, s electron.Sender) (interface{}, error) {
