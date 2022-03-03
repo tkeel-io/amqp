@@ -1,5 +1,10 @@
 # tKeel amqp
 We provide `sender` and `receiver` for you to easily connect **amqp** using the Go.
+## Required
+Please check your environment have the following lib:
+
+[Qpid Proton - AMQP messaging toolkit](https://github.com/apache/qpid-proton/blob/main/INSTALL.md)
+
 
 ## Usage
 Default Start the server at `:3172`
