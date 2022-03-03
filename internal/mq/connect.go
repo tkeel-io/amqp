@@ -149,10 +149,16 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	ch := FindSourceChan(id)
 
 	for message := range claim.Messages() {
+		fmt.Printf("Message claimed: value = %s, timestamp = %v, topic = %s \n", string(message.Value), message.Timestamp, message.Topic)
+		session.MarkMessage(message, "")
+		data, err := parser(message.Value)
+		if err != nil {
+			log.Errorf("Error parsing message: %v", err)
+			return err
+		}
 		select {
-		case ch <- message.Value:
-			fmt.Printf("Message claimed: value = %s, timestamp = %v, topic = %s \n", string(message.Value), message.Timestamp, message.Topic)
-			session.MarkMessage(message, "")
+		case ch <- data:
+			log.Info("get data from subscription kafka topic: ", data)
 		}
 	}
 
