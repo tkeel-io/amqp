@@ -30,7 +30,7 @@ func userAuthHandler(conn electron.Connection, s electron.Sender) (interface{}, 
 	if token == "" || strings.HasPrefix("Bearer", token) {
 		return nil, errors.New("invalid token")
 	}
-	user, err := auth.Authenticate(token, auth.AuthTokenURLTestRemote)
+	user, err := auth.Authenticate(token, auth.AuthTokenURLInvoke)
 	if err != nil {
 		log.Error("auth failed", err)
 		return nil, err
