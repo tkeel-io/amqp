@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	_BrokersStr       = "http://"
+	_BrokersStr       = "localhost:9092"
 	_ConsumerGroup    = "amqp"
-	_KafkaVersion     = "2.1.0"
+	_KafkaVersion     = "3.1.0"
 	_KafkaAssignor    = "roundrobin"
 	_KafkaOldestEable = true
 )

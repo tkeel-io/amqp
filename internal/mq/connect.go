@@ -2,7 +2,7 @@ package mq
 
 import (
 	"context"
-	"github.com/pkg/errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -10,12 +10,13 @@ import (
 	"syscall"
 
 	"github.com/Shopify/sarama"
+	"github.com/pkg/errors"
 	"github.com/tkeel-io/kit/log"
 )
 
 func Connect(ctx context.Context, topics string) {
 	keepRunning := true
-	log.Debug("Starting a new Sarama consumer")
+	fmt.Println("Starting a new Sarama consumer")
 
 	version, err := sarama.ParseKafkaVersion(_KafkaVersion)
 	if err != nil {
@@ -89,10 +90,10 @@ func Connect(ctx context.Context, topics string) {
 	for keepRunning {
 		select {
 		case <-ctx.Done():
-			log.Info("terminating: context cancelled")
+			fmt.Println("terminating: context cancelled")
 			keepRunning = false
 		case <-sigterm:
-			log.Info("terminating: via signal")
+			fmt.Println("terminating: via signal")
 			keepRunning = false
 		case <-sigusr1:
 			toggleConsumptionFlow(client, &consumptionIsPaused)
@@ -131,44 +132,34 @@ func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
 
 // Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
 func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	id, ok := consumer.ctx.Value("id").(string)
+	if !ok {
+		return errors.New("id not found in context")
+	}
+	ShutdownChan(id)
 	return nil
 }
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	ch, err := findCtxChannel(consumer.ctx)
-	if err != nil {
-		return err
+	id, ok := consumer.ctx.Value("id").(string)
+	if !ok {
+		return errors.New("id not found in context")
 	}
+	ch := FindSourceChan(id)
 
-	go func() {
-		for message := range claim.Messages() {
-			select {
-			case ch <- message.Value:
-				log.Info("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
-				session.MarkMessage(message, "")
-			}
+	for message := range claim.Messages() {
+		select {
+		case ch <- message.Value:
+			fmt.Printf("Message claimed: value = %s, timestamp = %v, topic = %s \n", string(message.Value), message.Timestamp, message.Topic)
+			session.MarkMessage(message, "")
 		}
-	}()
+	}
 
 	return nil
 }
 
 var channelManager = make(map[string]chan []byte)
-
-func findCtxChannel(ctx context.Context) (chan []byte, error) {
-	id, ok := ctx.Value("id").(string)
-	if !ok {
-		return nil, errors.New("id not found in context")
-	}
-	ch, ok := channelManager[id]
-	if ok {
-		return ch, nil
-	}
-	ch = make(chan []byte, 1)
-	channelManager[id] = ch
-	return ch, nil
-}
 
 func FindSourceChan(id string) chan []byte {
 	ch, ok := channelManager[id]

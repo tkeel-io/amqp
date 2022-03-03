@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/tkeel-io/amqp/internal/mq"
 	"net/http"
 	"strings"
@@ -43,19 +44,23 @@ func userAuthHandler(conn electron.Connection, s electron.Sender) (interface{}, 
 // senderHandler process with message witch u want to send
 func senderHandler(ctx context.Context, s electron.Sender) <-chan amqp.Message {
 	ch := make(chan amqp.Message, 1)
-	go func(s electron.Sender) {
-		mq.Connect(context.WithValue(ctx, "id", s.Source()), s.Source())
+	go func(s electron.Sender, ch chan<- amqp.Message) {
 		source := mq.FindSourceChan(s.Source())
+		go mq.Connect(context.WithValue(ctx, "id", s.Source()), s.Source())
 		for {
 			select {
 			case <-ctx.Done():
 				close(ch)
 				return
-			case data := <-source:
+			case data, ok := <-source:
+				if !ok {
+					continue
+				}
+				fmt.Printf("get data:%s\n", data)
 				ch <- amqp.NewMessageWith(data)
 			}
 		}
-	}(s)
+	}(s, ch)
 	return ch
 }
 

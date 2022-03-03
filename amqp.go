@@ -91,7 +91,8 @@ func (c *connection) run() {
 			in.Accept() // Accept sessions unconditionally
 		}
 	}
-	log.Debugf("incoming closed: %v", c.conn)
+	fmt.Printf("incoming closed: %v\n", c.conn)
+	c.cancel()
 }
 
 // receiver receives messages and pushes to a queue.
@@ -114,6 +115,7 @@ func (c *connection) sender(sender electron.Sender) {
 	auth, err := c.broker.authHandler(c.conn, sender)
 	if err != nil {
 		log.Error(err)
+		fmt.Printf("auth error: %v\n", err)
 		c.conn.Disconnect(err)
 		return
 	}
@@ -123,15 +125,18 @@ func (c *connection) sender(sender electron.Sender) {
 	for {
 		if sender.Error() != nil {
 			log.Debugf("%v closed: %v", sender, sender.Error())
+			fmt.Printf("%v closed: %v\n", sender, sender.Error())
 			return
 		}
-
 		select {
 		case m, ok := <-ch:
-			log.Debugf("%v: sent %v", sender, m.Body())
 			if ok {
+				log.Debugf("%v: sent %v", sender, m.Body())
+				fmt.Printf("%v: sent %v\n", sender, m.Body())
 				sender.SendSync(m)
 			} else {
+				log.Debugf("%v: channel closed", sender)
+				fmt.Printf("%v: channel closed\n", sender)
 				sender.Close(errors.New("sender closed"))
 			}
 		case <-sender.Done():
