@@ -33,3 +33,21 @@ for i := 0; i < 5; i++ {
     fmt.Printf("Received %d: %s\n", i, content)
 }
 ```
+
+## Build and start tKeel amqp-broker Server
+Build amqp-broker server:
+```bash
+go build -o ./bin/amqp-broker ./cmd/*
+```
+Then binary executable file is `amqp-broker` in `./bin`.
+
+Config your system environment variable switch your kafka connection config info: 
+
+(Source code Detail see: `internal/mq/config.go`)
+```bash
+    export KAFKA_BROKERS=localhost:3172
+    export KAFKA_CONSUMER_GROUP=amqp
+    export KAFKA_VERSION=3.1.0
+    export KAFKA_ASSIGNOR=roundrobin
+    export KAFKA_OLDEST_ENABLE=true
+```
