@@ -22,6 +22,7 @@ var Server = &cobra.Command{
 }
 
 func run(cmd *cobra.Command, args []string) {
+	service.ConfigInit()
 	broker := service.NewBroker(address)
 	if err := broker.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

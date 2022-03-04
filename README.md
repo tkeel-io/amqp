@@ -11,7 +11,7 @@ Default Start the server at `:3172`
 
 Start the server:
 ```bash
-go run ./...
+go run ./cmd/* --address :3172
 ```
 
 More details please see the `main.go` file for how this server running.
@@ -51,3 +51,9 @@ Config your system environment variable switch your kafka connection config info
     export KAFKA_ASSIGNOR=roundrobin
     export KAFKA_OLDEST_ENABLE=true
 ```
+
+Config `Core-Broker` connection info:
+```bash
+    export CORE_BROKER_SUBSCRIBE_VALIDATE_URL=http://192.168.123.9:30707/apis/core-broker/v1/validate/subscribe
+```
+

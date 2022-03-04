@@ -65,8 +65,6 @@ func senderHandler(ctx context.Context, s electron.Sender) <-chan amqp.Message {
 }
 
 func validateTopic(user *auth.User, topic string) bool {
-	validateURL := "http://192.168.123.9:30707/apis/core-broker/v1/validate/subscribe"
-
 	data := map[string]string{
 		"topic": topic,
 	}
@@ -76,7 +74,7 @@ func validateTopic(user *auth.User, topic string) bool {
 		return false
 	}
 
-	req, err := http.NewRequest(http.MethodPost, validateURL, bytes.NewReader(content))
+	req, err := http.NewRequest(http.MethodPost, _subscribeValidateURL, bytes.NewReader(content))
 	req.Header.Add("Authorization", user.Token)
 	resp, err := http.DefaultClient.Do(req)
 	defer resp.Body.Close()
