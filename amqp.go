@@ -3,8 +3,9 @@ package amqp
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"net"
+
+	"github.com/pkg/errors"
 
 	"github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
@@ -112,15 +113,16 @@ func (c *connection) receiver(receiver electron.Receiver) {
 
 func (c *connection) sender(sender electron.Sender) {
 	c.conn.Sync()
-	auth, err := c.broker.authHandler(c.conn, sender)
-	if err != nil {
-		log.Error(err)
-		fmt.Printf("auth error: %v\n", err)
-		c.conn.Disconnect(err)
-		return
-	}
-	c.auth = auth
-
+	/*
+		auth, err := c.broker.authHandler(c.conn, sender)
+		if err != nil {
+			log.Error(err)
+			fmt.Printf("auth error: %v\n", err)
+			c.conn.Disconnect(err)
+			return
+		}
+		c.auth = auth
+	*/
 	ch := c.broker.senderHandler(c.ctx, sender)
 	for {
 		if sender.Error() != nil {

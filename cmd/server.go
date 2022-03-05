@@ -5,13 +5,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tkeel-io/amqp/internal/mq"
 	"github.com/tkeel-io/amqp/internal/service"
 )
 
 var address string
 
 func ParseFlags(root *cobra.Command) {
-	root.PersistentFlags().StringVar(&address, "address", ":3172", "the broker address and port you want to open")
+	root.PersistentFlags().StringVar(&address, "address", ":5672", "the broker address and port you want to open")
 }
 
 var Server = &cobra.Command{
@@ -23,6 +24,7 @@ var Server = &cobra.Command{
 
 func run(cmd *cobra.Command, args []string) {
 	service.ConfigInit()
+	mq.Init()
 	broker := service.NewBroker(address)
 	if err := broker.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

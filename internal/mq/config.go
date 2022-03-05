@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	_BrokersStr       = "localhost:9092"
+	_BrokersStr       = "tkeel-middleware-kafka-headless:9092"
 	_ConsumerGroup    = "amqp"
 	_KafkaVersion     = "3.1.0"
 	_KafkaAssignor    = "roundrobin"
