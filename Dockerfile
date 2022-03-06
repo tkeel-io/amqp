@@ -5,14 +5,14 @@
 
 ############################################################
 
-FROM tkeelio/go-proton-dev:v1 as builder
+FROM tkeelio/go-proton-dev:v2 as builder
 
 COPY . /src
 WORKDIR /src
 
 RUN GOPROXY=https://goproxy.cn go build -o amqp-broker ./cmd/*
 
-FROM tkeelio/go-proton-dev:v1
+FROM tkeelio/proton-runtime:v2
 
 RUN mkdir /keel
 COPY --from=builder /src/amqp-broker /keel
