@@ -7,11 +7,11 @@ Please check your environment have the following lib:
 
 
 ## Usage
-Default Start the server at `:3172`
+Default Start the server at `:5672`
 
 Start the server:
 ```bash
-go run ./cmd/* --address :3172
+go run ./cmd/* --address :5672
 ```
 
 More details please see the `main.go` file for how this server running.
@@ -21,7 +21,7 @@ See `receiver_test.go`
 
 That's very simple.
 ```go
-testUrl := "amqp://localhost:3172/topic"
+testUrl := "amqp://localhost:5672/topic"
 r, err := NewReceiver(testUrl, electron.User("fred1"),
     electron.VirtualHost("token"),
     electron.Password([]byte("mypassword")),
@@ -45,7 +45,7 @@ Config your system environment variable switch your kafka connection config info
 
 (Source code Detail see: `internal/mq/config.go`)
 ```bash
-    export KAFKA_BROKERS=localhost:3172
+    export KAFKA_BROKERS=localhost:5672
     export KAFKA_CONSUMER_GROUP=amqp
     export KAFKA_VERSION=3.1.0
     export KAFKA_ASSIGNOR=roundrobin
