@@ -37,7 +37,7 @@ for i := 0; i < 5; i++ {
 ## Build and start tKeel amqp-broker Server
 Build amqp-broker server:
 ```bash
-go build -o ./bin/amqp-broker ./cmd/*
+go build -o ./bin/amqp-broker ./cmd/*.go
 ```
 Then binary executable file is `amqp-broker` in `./bin`.
 
@@ -57,3 +57,17 @@ Config `Core-Broker` connection info:
     export CORE_BROKER_SUBSCRIBE_VALIDATE_URL=http://192.168.123.9:30707/apis/core-broker/v1/validate/subscribe
 ```
 
+## Build amqp receiver tool
+```bash
+go build -o ./bin/amqp-receiver ./cmd/reciver/*.go
+```
+
+Run it:
+```bash
+./bin/amqp-receiver -c amqp://tkeel.io:30082
+```
+
+More flag or helping see `-h` flag
+```bash
+./bin/amqp-receiver -h
+```
