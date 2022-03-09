@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	amqplib "github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/tkeel-io/amqp"
 	"github.com/tkeel-io/amqp/internal/jsonutil"
-	"os"
-	"strings"
 )
 
 var (
