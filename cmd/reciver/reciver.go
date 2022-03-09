@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"strings"
-	"syscall"
-
+	amqplib "github.com/apache/qpid-proton/go/pkg/amqp"
 	"github.com/apache/qpid-proton/go/pkg/electron"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/tkeel-io/amqp"
+	"github.com/tkeel-io/amqp/internal/jsonutil"
+	"os"
+	"strings"
 )
 
 var (
@@ -36,10 +35,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-stop
-	color.Yellow("Quit!")
 	os.Exit(0)
 }
 
@@ -104,6 +99,6 @@ func receiveAndPrint(r *amqp.Receiver) error {
 		return err
 	}
 	color.Green("[RECEIVED RAW DATA]")
-	fmt.Printf("%s \n", content)
+	fmt.Printf("%s \n", jsonutil.Stringify([]byte(content.(amqplib.Binary))))
 	return nil
 }
